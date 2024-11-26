@@ -74,14 +74,93 @@ sort($years);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Laporan Inspeksi - S I A P</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
-        h1 { color: #2c3e50; margin-bottom: 20px; text-align: center; font-size: 24px; font-weight: 700; }
-        .filter-form { margin-bottom: 20px; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-        th { background-color: #3498db; color: white; font-weight: 700; }
-        tr:hover { background-color: #ecf0f1; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .filter-form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .filter-form select, .filter-form button {
+            padding: 10px;
+            margin: 0 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .filter-form button {
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+        }
+        .filter-form button:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+        }
+        tr:hover {
+            background-color: #ecf0f1;
+        }
+        .button {
+            background-color: #27ae60;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .button:hover {
+            background-color: #2ecc71;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #27ae60;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            line-height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -126,9 +205,16 @@ sort($years);
                         <td><?php echo date('F Y', strtotime($inventory_items[0]['tanggal'])); ?></td>
                         <td><?php echo htmlspecialchars($inventory_items[0]['alamat']); ?></td>
                         <td>
-                            <a href="../generatePDF.php?ba=<?php echo urlencode($inventory_items[0]['BA']); ?>&month=<?php echo urlencode($selectedMonth); ?>&year=<?php echo urlencode($selectedYear); ?>">Unduh</a>
+                            <a href="../generatePDF.php?ba=<?php echo urlencode($inventory_items[0]['BA']); ?>&month=<?php echo urlencode($selectedMonth); ?>&year=<?php echo urlencode($selectedYear); ?>" class="button">Unduh</a>
                         </td>
-                        <td><?php echo $progressPercentage; ?>%</td>
+                        <td>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: <?php echo $progressPercentage; ?>%;">
+                                <?php echo $progressPercentage; ?>%
+                            </div>
+                        </div>
+                        </td>
+
                     </tr>
                 <?php else: ?>
                     <tr>

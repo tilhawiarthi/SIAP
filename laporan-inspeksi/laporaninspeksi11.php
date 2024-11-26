@@ -16,7 +16,28 @@ $BA = 'H550'; // Ganti dengan BA yang sesuai
 $selectedMonth = isset($_GET['month']) ? $_GET['month'] : date('m');
 $selectedYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
 
-// Query untuk mengambil data berdasarkan BA dan bulan/tahun tertentu, menghindari duplikasi tanggal
+// Query untuk mengambil total APAR berdasarkan BA
+$totalQuery = "SELECT COUNT(*) AS total_apar FROM inventory WHERE BA = :ba";
+$totalStmt = $pdo->prepare($totalQuery);
+$totalStmt->bindParam(':ba', $BA, PDO::PARAM_STR);
+$totalStmt->execute();
+$totalAPAR = $totalStmt->fetch(PDO::FETCH_ASSOC)['total_apar'];
+
+// Query untuk menghitung jumlah APAR yang sudah diperiksa
+$inspectedQuery = "SELECT COUNT(DISTINCT id) AS inspected_apar 
+                   FROM inspections 
+                   WHERE BA = :ba AND MONTH(tanggal) = :month AND YEAR(tanggal) = :year";
+$inspectedStmt = $pdo->prepare($inspectedQuery);
+$inspectedStmt->bindParam(':ba', $BA, PDO::PARAM_STR);
+$inspectedStmt->bindParam(':month', $selectedMonth, PDO::PARAM_INT);
+$inspectedStmt->bindParam(':year', $selectedYear, PDO::PARAM_INT);
+$inspectedStmt->execute();
+$inspectedAPAR = $inspectedStmt->fetch(PDO::FETCH_ASSOC)['inspected_apar'];
+
+// Menghitung persentase progres
+$progressPercentage = ($totalAPAR > 0) ? round(($inspectedAPAR / $totalAPAR) * 100, 2) : 0;
+
+// Query untuk mengambil data berdasarkan BA dan bulan/tahun tertentu
 $query = "SELECT BA, MIN(tanggal) AS tanggal, alamat 
           FROM inspections 
           WHERE BA = :ba 
@@ -29,8 +50,6 @@ $stmt->bindParam(':ba', $BA, PDO::PARAM_STR);
 $stmt->bindParam(':month', $selectedMonth, PDO::PARAM_INT);
 $stmt->bindParam(':year', $selectedYear, PDO::PARAM_INT);
 $stmt->execute();
-
-// Ambil data inventaris dari database
 $inventory_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Ambil bulan untuk form filter
@@ -42,11 +61,10 @@ $yearStmt = $pdo->prepare($yearQuery);
 $yearStmt->execute();
 $years = $yearStmt->fetchAll(PDO::FETCH_COLUMN);
 
-// Tambahkan tahun saat ini dan beberapa tahun ke depan untuk dropdown
 $currentYear = date('Y');
-$years = array_merge(range($currentYear - 5, $currentYear + 1000), $years);
-$years = array_unique($years); // Hapus duplikat
-sort($years); // Urutkan tahun
+$years = array_merge(range($currentYear - 5, $currentYear + 5), $years);
+$years = array_unique($years);
+sort($years);
 ?>
 
 <!DOCTYPE html>
@@ -81,11 +99,21 @@ sort($years); // Urutkan tahun
             margin-bottom: 20px;
             text-align: center;
         }
-        .filter-form select {
+        .filter-form select, .filter-form button {
             padding: 10px;
             margin: 0 5px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .filter-form button {
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+        }
+        .filter-form button:hover {
+            background-color: #2980b9;
         }
         table {
             width: 100%;
@@ -111,14 +139,27 @@ sort($years); // Urutkan tahun
             padding: 8px 12px;
             text-decoration: none;
             border-radius: 5px;
-            cursor: pointer;
-            display: inline-block;
-            transition: background-color 0.3s;
             font-size: 12px;
-            text-align: center;
+            display: inline-block;
         }
         .button:hover {
             background-color: #2ecc71;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #27ae60;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            line-height: 20px;
         }
     </style>
 </head>
@@ -144,9 +185,7 @@ sort($years); // Urutkan tahun
                 </option>
                 <?php endforeach; ?>
             </select>
-
-            <input type="hidden" name="BA" value="<?php echo htmlspecialchars($BA); ?>">
-            <button type="submit" class="button">Tampilkan</button>
+            <button type="submit">Tampilkan</button>
         </form>
 
         <table>
@@ -156,19 +195,32 @@ sort($years); // Urutkan tahun
                     <th>Bulan Inspeksi</th>
                     <th>Alamat</th>
                     <th>Unduh</th>
+                    <th>Progres</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($inventory_items as $item): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($item['BA']); ?></td>
-                    <td><?php echo date('F Y', strtotime($item['tanggal'])); ?></td>
-                    <td><?php echo htmlspecialchars($item['alamat']); ?></td>
-                    <td>
-                        <a href="../generatePDF.php?ba=<?php echo urlencode($item['BA']); ?>&month=<?php echo urlencode($selectedMonth); ?>&year=<?php echo urlencode($selectedYear); ?>" class="button">Unduh</a>
-                     </td>
-                </tr>
-                <?php endforeach; ?>
+                <?php if (!empty($inventory_items)): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($inventory_items[0]['BA']); ?></td>
+                        <td><?php echo date('F Y', strtotime($inventory_items[0]['tanggal'])); ?></td>
+                        <td><?php echo htmlspecialchars($inventory_items[0]['alamat']); ?></td>
+                        <td>
+                            <a href="../generatePDF.php?ba=<?php echo urlencode($inventory_items[0]['BA']); ?>&month=<?php echo urlencode($selectedMonth); ?>&year=<?php echo urlencode($selectedYear); ?>" class="button">Unduh</a>
+                        </td>
+                        <td>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: <?php echo $progressPercentage; ?>%;">
+                                <?php echo $progressPercentage; ?>%
+                            </div>
+                        </div>
+                        </td>
+
+                    </tr>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Tidak ada data untuk periode ini.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
