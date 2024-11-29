@@ -73,6 +73,7 @@ session_start();
         .user-info {
             text-align: center;
             margin-bottom: 20px;
+            font-weight: bold;
         }
         .user-info h2 {
             margin: 0;
@@ -137,7 +138,7 @@ session_start();
     <div class="container">
         <!-- Informasi Pengguna -->
         <div class="user-info">
-            <h2>Selamat datang, Salam Satu Hati</h2>
+            <!-- <h2>Salam Satu Hati</h2> -->
             <div class="logo">
                 <img src="../asset/astra.png" alt="Logo"> <!-- Ganti dengan path gambar logo -->
             </div>
