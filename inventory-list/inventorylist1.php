@@ -1,4 +1,4 @@
-<?php
+<?php 
 // Koneksi ke database
 $host = 'localhost';
 $dbname = 'firecheck1';
@@ -44,14 +44,6 @@ $inventory_items = array_values($unique_inventory_items);
             margin: 0;
             padding: 0;
         }
-       /* .container { */
-           /* width: 100%; atau bisa dihapus max-width */
-            /* margin: 50px auto; */
-            /* background: #fff; */
-            /* padding: 40px; */
-            /* border-radius: 10px; */
-            /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
-        /* } */
 
         h1 {
             font-size: 28px;
@@ -60,6 +52,7 @@ $inventory_items = array_values($unique_inventory_items);
             margin-bottom: 30px;
             font-weight: 600;
         }
+
         .back-button {
             display: inline-flex;
             align-items: center;
@@ -79,28 +72,34 @@ $inventory_items = array_values($unique_inventory_items);
         .back-button .arrow-left {
             margin-right: 8px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 16px;
         }
+
         table thead {
             background-color: #343a40;
             color: #fff;
         }
+
         table th, table td {
             padding: 10px;
             text-align: left;
             border: 1px solid #dee2e6;
         }
+
         table th {
             text-transform: uppercase;
             letter-spacing: 0.1em;
         }
+
         table tr:nth-child(even) {
             background-color: #f8f9fa;
         }
+
         .button {
             display: inline-block;
             background-color: #007bff;
@@ -112,8 +111,15 @@ $inventory_items = array_values($unique_inventory_items);
             font-size: 16px;
             transition: background 0.3s;
         }
+
         .button:hover {
             background-color: #0056b3;
+        }
+
+        /* Styling QR code to be large */
+        .qr-code img {
+            width: 150px;  /* Set desired size */
+            height: 150px; /* Set desired size */
         }
     </style>
 </head>
@@ -125,20 +131,21 @@ $inventory_items = array_values($unique_inventory_items);
             <thead>
                 <tr>
                     <th>NO APAR</th>
-                    <th>region</th>
+                    <th>Region</th>
                     <th>BA</th>
                     <th>SO</th>
                     <th>Alamat</th>
                     <th>Lantai</th>
                     <th>Ruangan</th>
                     <th>Titik Penempatan</th>
-                    <th>merk</th>
-                    <th>tipe</th>
-                    <th>jenis isi</th>
-                    <th>berat isi</th>
+                    <th>Merk</th>
+                    <th>Tipe</th>
+                    <th>Jenis Isi</th>
+                    <th>Berat Isi</th>
                     <th>Tahun Produksi</th>
                     <th>Tahun Expired</th>  
                     <th>Kode QR</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -158,8 +165,8 @@ $inventory_items = array_values($unique_inventory_items);
                     <td><?php echo htmlspecialchars($item['berat_isi']); ?></td>
                     <td><?php echo date('F Y', strtotime($item['Tahun_Produksi'])); ?></td>
                     <td><?php echo date('F Y', strtotime($item['Tahun_Expired'])); ?></td>
-                    <td>
-                         <?php 
+                    <td class="qr-code">
+                        <?php 
                         // Menggabungkan data yang relevan menjadi satu string untuk QR Code
                             $kode = json_encode([
                             'no_apar' => $item['no_apar'],
@@ -177,14 +184,17 @@ $inventory_items = array_values($unique_inventory_items);
                              'Tahun_Produksi' => $item['Tahun_Produksi'],
                              'Tahun_Expired' => $item['Tahun_Expired']
                              ]);
-    
+
                                  require_once('../phpqrcode/phpqrcode/qrlib.php');
 
-                                // Ganti parameter ketiga dengan ukuran yang valid, misalnya 4
-                                QRcode::png($kode, "kode{$item['no_apar']}.png", QR_ECLEVEL_L, 4, 2);
-                                ?>
-                                <img src="kode<?php echo htmlspecialchars($item['no_apar']); ?>.png" alt="QR Code for <?php echo htmlspecialchars($item['no_apar']); ?>">
-                    </td>>
+                                // Menambahkan ukuran QR Code yang lebih besar
+                                QRcode::png($kode, "kode{$item['no_apar']}.png", QR_ECLEVEL_L, 6, 2);
+                        ?>
+                        <img src="kode<?php echo htmlspecialchars($item['no_apar']); ?>.png" alt="QR Code for <?php echo htmlspecialchars($item['no_apar']); ?>">
+                    </td>
+                    <td>
+                        <a href="edit_inventory.php?no_apar=<?php echo htmlspecialchars($item['no_apar']); ?>" class="button">Edit</a>
+                    </td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
